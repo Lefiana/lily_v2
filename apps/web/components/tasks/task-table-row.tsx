@@ -29,6 +29,7 @@ export function TaskTableRow({ task, onDelete, onEdit }: TaskTableRowProps) {
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("")
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   // Hook for subtask operations
   const { createSubtask, toggleSubtask, deleteSubtask } = useSubtasks(task.id)
 
@@ -112,7 +113,30 @@ if (response.ok) {
     }
   };
 return (
-    <Collapsible
+  <div 
+    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+    onDragLeave={() => setIsDragging(false)}
+    onDrop={async (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        // This calls your file upload logic
+        handleFileChange({ target: { files } } as any); 
+      }
+    }}
+    className={`relative rounded-xl transition-all ${isDragging ? 'ring-2 ring-blue-500 bg-blue-500/5' : ''}`}
+  >
+    {/* Visual Overlay when dragging */}
+    {isDragging && (
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-blue-500/10 backdrop-blur-sm pointer-events-none rounded-xl">
+        <div className="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-bounce">
+          DROP TO ATTACH INTEL
+        </div>
+      </div>
+    )}
+
+      <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
       className="w-full border-b border-white/5 transition-all hover:bg-white/[0.02]"
@@ -378,5 +402,7 @@ return (
         </div>
       </CollapsibleContent>
     </Collapsible>
-  )
+  </div>
+);
+
 }
