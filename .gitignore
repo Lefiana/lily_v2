@@ -27,6 +27,8 @@ out/
 build
 dist
 
+# Uploaded files
+uploads/
 
 # Debug
 npm-debug.log*

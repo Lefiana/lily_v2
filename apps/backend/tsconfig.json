@@ -1,0 +1,65 @@
+// {
+//   "compilerOptions": {
+//     "module": "ESNext",
+//     "moduleResolution": "bundler", 
+//     "target": "ES2021",
+//     "outDir": "./dist",
+//     "rootDir": "./src",
+    
+//     // Aligns with modern TS 6.0+ requirements
+//     "allowImportingTsExtensions": false,
+//     "resolveJsonModule": true,
+//     "isolatedModules": true,
+//     "noEmit": false, // NestJS needs to emit files
+//     "esModuleInterop": true,
+
+//     // Aliases without the deprecated baseUrl
+//     "paths": {
+//       "@core/*": ["./src/core/*"],
+//       "@modules/*": ["./src/modules/*"]
+//     },
+
+//     "strict": true,
+//     "strictPropertyInitialization": false,
+//     "forceConsistentCasingInFileNames": true,
+//     "emitDecoratorMetadata": true,
+//     "experimentalDecorators": true,
+//     "skipLibCheck": true,
+    
+//     // This silences the specific warnings you are seeing
+//     "ignoreDeprecations": "5.0"
+//   },
+//   "include": ["src/**/*"],
+//   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+// }
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2022",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["/*"],
+      "@core/*": ["core/*"],
+      "@modules/*": ["modules/*"]
+    },
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false
+  }
+}
