@@ -10,6 +10,6 @@ import { TasksRepository } from './repositories';
   imports: [PrismaModule],
   controllers: [TasksController],
   providers: [TasksService, TasksRepository, TasksGateway],
-  exports: [TasksService]
+  exports: [TasksService],
 })
 export class TasksModule {}

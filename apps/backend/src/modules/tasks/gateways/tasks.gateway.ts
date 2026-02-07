@@ -31,18 +31,16 @@ export class TasksGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join_room')
-    handleJoinRoom(client: Socket, userId: string) {
-      const room = `user_${userId}`;
-      client.join(room);
-      this.logger.log(`User ${userId} joined room ${room}`);
-      // Optional: Send confirmation back to client
-      client.emit('joined', { room });
-    }
+  handleJoinRoom(client: Socket, userId: string) {
+    const room = `user_${userId}`;
+    client.join(room);
+    this.logger.log(`User ${userId} joined room ${room}`);
+    // Optional: Send confirmation back to client
+    client.emit('joined', { room });
+  }
   emitToUser(userId: string, event: string, payload: any) {
     // Ensure we emit to the namespace-specific server
     this.server.to(`user_${userId}`).emit(event, payload);
     this.logger.log(`Emitting ${event} to user_${userId}`);
   }
-  
-
-  }
+}

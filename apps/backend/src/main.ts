@@ -1,7 +1,7 @@
 // apps/backend/src/main.ts
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as express from 'express'; // Import express
@@ -9,7 +9,7 @@ import cookieParser from 'cookie-parser';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
-const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false, // Essential for nestjs-better-auth
   });
 
@@ -36,7 +36,9 @@ const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 
   // 4. URL Encoding and Static Assets
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads/' });
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.setGlobalPrefix('api');

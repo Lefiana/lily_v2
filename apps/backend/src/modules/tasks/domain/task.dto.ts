@@ -1,9 +1,23 @@
 // apps/backend/src/modules/tasks/domain/task.dto.ts
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDateString, IsArray, IsBoolean, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsArray,
+  IsBoolean,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { TaskStatus, TaskPriority, RecurrenceType } from '@prisma/client';
+import {
+  TaskStatus,
+  TaskPriority,
+  RecurrenceType,
+  TaskCategory,
+} from '@prisma/client';
 import { PartialType } from '@nestjs/mapped-types';
-class CreateSubtaskDto{
+class CreateSubtaskDto {
   @IsString()
   @IsNotEmpty()
   title!: string;
@@ -32,6 +46,10 @@ export class CreateTaskDto {
   @IsEnum(RecurrenceType)
   @IsOptional()
   recurrence?: RecurrenceType;
+
+  @IsEnum(TaskCategory)
+  @IsOptional()
+  category?: TaskCategory;
 
   @IsArray()
   @IsOptional()

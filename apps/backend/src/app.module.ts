@@ -3,14 +3,14 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { betterAuth } from 'better-auth';
-import { authConfig } from './auth'; 
+import { authConfig } from './auth';
 import { PrismaModule } from './core/prisma/prisma.module';
 import { PrismaService } from './core/prisma/prisma.service';
 import { ConfigModule } from '@nestjs/config';
 import { Request, Response, NextFunction } from 'express';
 
-import { TasksModule } from '@modules/tasks'
-import { UserModule } from '@modules/users'
+import { TasksModule } from '@modules/tasks';
+import { UserModule } from '@modules/users';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 @Module({
@@ -29,11 +29,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
           database: prismaAdapter(prisma, { provider: 'postgresql' }),
         }),
         // FIX for Express 5 404s:
-        // This ensures Better Auth sees the full URL (/api/auth/signup) 
+        // This ensures Better Auth sees the full URL (/api/auth/signup)
         // instead of just the truncated Express 5 version.
-        middleware: async (req: Request, _res: Response, next: NextFunction) => {
+        middleware: async (
+          req: Request,
+          _res: Response,
+          next: NextFunction,
+        ) => {
           req.url = req.originalUrl;
-          req.baseUrl = "";
+          req.baseUrl = '';
           next();
         },
       }),
@@ -43,8 +47,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
     PrismaModule,
   ],
 })
-
-
 export class AppModule {
   // Optional: Configure Swagger in the module (or in main.ts)
   static configureSwagger(app: any) {
@@ -57,6 +59,6 @@ export class AppModule {
       .addTag('users', 'User management')
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api-docs', app, document);  // Accessible at /api-docs
+    SwaggerModule.setup('api-docs', app, document); // Accessible at /api-docs
   }
 }

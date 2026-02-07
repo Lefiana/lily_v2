@@ -1,45 +1,53 @@
 // apps/web/types/task.ts
 
 export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  TODO = "TODO",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
 }
 
 export enum TaskEvents {
-  TASK_CREATED = 'task_created',
-  TASK_UPDATED = 'task_updated',
-  TASK_DELETED = 'task_deleted',
-  SUBTASK_ADDED = 'subtask_added',
-  SUBTASK_UPDATED = 'subtask_updated',
-  SUBTASK_DELETED = 'subtask_deleted',
+  TASK_CREATED = "task_created",
+  TASK_UPDATED = "task_updated",
+  TASK_DELETED = "task_deleted",
+  SUBTASK_ADDED = "subtask_added",
+  SUBTASK_UPDATED = "subtask_updated",
+  SUBTASK_DELETED = "subtask_deleted",
+}
+
+export enum TaskCategory {
+  TASK = "TASK",
+  ITEM = "ITEM",
+  LOG = "LOG",
+  ARCHIVE = "ARCHIVE",
 }
 
 export interface ISubtask {
-    id: string;
-    title: string;
-    description?: string | null;
-    status: TaskStatus;
-    completed: boolean;
-    order: number;
-    createdAt: Date;
-    updatedAt: Date;
-    taskId: string;
+  id: string;
+  title: string;
+  description?: string | null;
+  status: TaskStatus;
+  completed: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+  taskId: string;
 }
 
 export interface ITask {
-    id: string;
-    title: string;
-    description?: string | null;
-    completed: boolean;
-    status: TaskStatus;
-    priority?: string | null;
-    dueDate?: Date | String | null;
-    createdAt: Date;
-    updatedAt: Date;
-    userId: string;
-    recurrence: string | null;
+  id: string;
+  title: string;
+  description?: string | null;
+  completed: boolean;
+  status: TaskStatus;
+  priority?: string | null;
+  category?: TaskCategory | null;
+  dueDate?: Date | String | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  recurrence: string | null;
 }
 
 export interface ITaskAttachment {
@@ -52,41 +60,43 @@ export interface ITaskAttachment {
   createdAt: Date;
 }
 export interface ICreateTaskDto {
-    title: string;
-    description?: string;
-    status?: TaskStatus;
-    priority?: string;
-    dueDate?: Date | string | null;
-    subtasks?: ICreateSubtaskDto[];
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: string;
+  category?: TaskCategory;
+  dueDate?: Date | string | null;
+  subtasks?: ICreateSubtaskDto[];
 }
 
 export interface IUpdateTaskDto {
-    title?: string;
-    description?: string;
-    completed?: boolean;
-    status?: TaskStatus;
-    priority?: string;
-    dueDate?: Date | string | null;
+  title?: string;
+  description?: string;
+  completed?: boolean;
+  status?: TaskStatus;
+  priority?: string;
+  category?: TaskCategory;
+  dueDate?: Date | string | null;
 }
 
 export interface ICreateSubtaskDto {
-    title: string;
-    description?: string;
-    status?: TaskStatus;
-    order?: number;
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  order?: number;
 }
 
 export interface IUpdateSubtaskDto {
-    title?: string;
-    description?: string;
-    status?: TaskStatus;
-    completed?: boolean;
-    order?: number;
+  title?: string;
+  description?: string;
+  status?: TaskStatus;
+  completed?: boolean;
+  order?: number;
 }
 
 export interface ITaskWithSubtasks extends ITask {
   subtask: ISubtask[];
-  TaskAttachment: ITaskAttachment[]
+  TaskAttachment: ITaskAttachment[];
 }
 
 // Define specific payloads for complex events
@@ -105,10 +115,10 @@ export interface IAttachmentDeletedPayload {
 }
 
 // The "Master" type for any data sent over the Task WebSocket
-export type TaskEventPayload = 
-  | ITask 
-  | ISubtask 
-  | ISubtaskAddedPayload 
+export type TaskEventPayload =
+  | ITask
+  | ISubtask
+  | ISubtaskAddedPayload
   | ITaskDeletedPayload
   | { taskId: string; attachment: ITaskAttachment }
   | IAttachmentDeletedPayload

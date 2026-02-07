@@ -2,7 +2,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CreateTaskDto, UpdateTaskDto, UpdateSubtaskDto } from '../domain/task.dto';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  UpdateSubtaskDto,
+} from '../domain/task.dto';
 import { randomUUID } from 'crypto';
 import { ITaskAttachment } from '../domain';
 // Helper for consistent includes across all methods
@@ -23,39 +27,45 @@ export class TasksRepository {
       data: {
         ...taskData,
         userId,
-        subtask: subtasks?.length ? {
-          create: subtasks.map(s => ({ title: s.title }))
-        } : undefined,
+        subtask: subtasks?.length
+          ? {
+              create: subtasks.map((s) => ({ title: s.title })),
+            }
+          : undefined,
       },
       include: taskInclude,
     });
   }
 
   async addAttachment(taskId: string, fileData: any) {
-    return await this.prisma.taskAttachment.create({
-        data: {
+    return (await this.prisma.taskAttachment.create({
+      data: {
         id: randomUUID(),
         ...fileData,
         taskId,
-        },
-    }) as ITaskAttachment;
-    }
+      },
+    })) as ITaskAttachment;
+  }
 
-    async findAttachmentById(id: string) {
+  async findAttachmentById(id: string) {
     return await this.prisma.taskAttachment.findUnique({
-        where: { id },
+      where: { id },
     });
-    }
+  }
 
-    async deleteAttachment(id: string) {
+  async deleteAttachment(id: string) {
     return await this.prisma.taskAttachment.delete({
-        where: { id },
+      where: { id },
     });
-    }
-  async findAll(userId: string, filters?: { status?: any; query?: string }) {
+  }
+  async findAll(
+    userId: string,
+    filters?: { status?: any; query?: string; category?: any },
+  ) {
     const where: Prisma.TaskWhereInput = {
       userId,
       ...(filters?.status && { status: filters.status }),
+      ...(filters?.category && { category: filters.category }),
       ...(filters?.query && {
         OR: [
           { title: { contains: filters.query, mode: 'insensitive' } },
@@ -71,6 +81,20 @@ export class TasksRepository {
     });
   }
 
+  async findAllWithAttachments(userId: string, filters?: { category?: any }) {
+    const where: Prisma.TaskWhereInput = {
+      userId,
+      TaskAttachment: { some: {} },
+      ...(filters?.category && { category: filters.category }),
+    };
+
+    return this.prisma.task.findMany({
+      where,
+      include: taskInclude,
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
   async findById(id: string, userId: string) {
     return this.prisma.task.findFirst({
       where: { id, userId },
@@ -78,26 +102,26 @@ export class TasksRepository {
     });
   }
 
-    async update(id: string, dto: UpdateTaskDto) {
+  async update(id: string, dto: UpdateTaskDto) {
     // 1. Pull subtasks out so they don't break the main task update
     const { subtasks, ...taskData } = dto;
 
     return this.prisma.task.update({
-        where: { id },
-        data: {
+      where: { id },
+      data: {
         ...taskData,
         // 2. If you want to support updating subtasks via the main Task update:
         // This is the Prisma way to handle nested updates:
         ...(subtasks && {
-            subtask: {
+          subtask: {
             deleteMany: {}, // Optional: clears old subtasks and replaces with new ones
-            create: subtasks.map(s => ({ title: s.title }))
-            }
-        })
-        },
-        include: taskInclude,
+            create: subtasks.map((s) => ({ title: s.title })),
+          },
+        }),
+      },
+      include: taskInclude,
     });
-    }
+  }
 
   async delete(id: string) {
     return this.prisma.task.delete({

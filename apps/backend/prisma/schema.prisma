@@ -29,6 +29,7 @@ model Task {
   description    String?
   status         TaskStatus       @default(TODO)
   priority       TaskPriority     @default(MEDIUM)
+  category       TaskCategory     @default(TASK)
   dueDate        DateTime?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -43,6 +44,7 @@ model Task {
   @@index([priority])
   @@index([status])
   @@index([userId])
+  @@index([category])
 }
 
 model TaskAttachment {
@@ -101,6 +103,13 @@ enum RecurrenceType {
   WEEKLY
   MONTHLY
   YEARLY
+}
+
+enum TaskCategory {
+  TASK
+  ITEM
+  LOG
+  ARCHIVE
 }
 
 model Session {
