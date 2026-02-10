@@ -41,8 +41,7 @@ export class TasksService {
 
   async create(dto: CreateTaskDto, userId: string) {
     try {
-      console.log('--- WEBSOCKET ATTEMPT ---');
-      console.log('Target User ID:', userId);
+      this.logger.debug(`Creating task for user: ${userId}`);
       const task = await this.repo.create(dto, userId);
       // Real-time hook
       this.gateway.emitToUser(userId, TaskEvents.TASK_CREATED, task);

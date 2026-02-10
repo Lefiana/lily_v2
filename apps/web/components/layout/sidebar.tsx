@@ -40,8 +40,8 @@
 //           </div>
 //         </div>
 
-//         <Button 
-//           variant="ghost" 
+//         <Button
+//           variant="ghost"
 //           onClick={handleLogout}
 //           className="w-full justify-start text-zinc-400 hover:text-red-400 hover:bg-red-400/10 mt-2"
 //         >
@@ -53,19 +53,28 @@
 //   );
 // }
 
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Swords, Package, Trophy, LogOut } from 'lucide-react';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Swords,
+  Package,
+  Box,
+  ClipboardList,
+  LogOut,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 
 const routes = [
-  { label: 'Quest Board', icon: LayoutDashboard, href: '/tasks' },
-  { label: 'Gacha', icon: Swords, href: '/gacha' },
-  { label: 'Inventory', icon: Package, href: '/inventory' },
+  { label: "Quest Board", icon: LayoutDashboard, href: "/tasks" },
+  { label: "Assets", icon: Box, href: "/assets" },
+  { label: "Checkouts", icon: ClipboardList, href: "/checkouts" },
+  { label: "Gacha", icon: Swords, href: "/gacha" },
+  { label: "Inventory", icon: Package, href: "/inventory" },
 ];
 
 export function Sidebar() {
@@ -74,8 +83,10 @@ export function Sidebar() {
   const handleLogout = async () => {
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => { window.location.href = "/login"; }
-      }
+        onSuccess: () => {
+          window.location.href = "/login";
+        },
+      },
     });
   };
 
@@ -85,7 +96,7 @@ export function Sidebar() {
         <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-8">
           LILY V2
         </h1>
-        
+
         <nav className="space-y-2">
           {routes.map((route) => (
             <Link
@@ -93,9 +104,9 @@ export function Sidebar() {
               href={route.href}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                pathname === route.href 
-                  ? "bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
-                  : "text-zinc-500 hover:text-white hover:bg-white/5"
+                pathname === route.href
+                  ? "bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                  : "text-zinc-500 hover:text-white hover:bg-white/5",
               )}
             >
               <route.icon className="h-5 w-5" />
@@ -107,8 +118,8 @@ export function Sidebar() {
 
       {/* Bottom Section */}
       <div className="p-4 border-t border-white/5">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={handleLogout}
           className="w-full justify-start text-zinc-500 hover:text-red-400 hover:bg-red-400/10"
         >

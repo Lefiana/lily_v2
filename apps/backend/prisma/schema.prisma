@@ -70,6 +70,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   task Task[]
+  
+  // Asset Management Relations
+  assets       Asset[]
+  checkouts    AssetCheckout[]
+  presets      AssetPreset[]
 
   emailVerified Boolean   @default(false)
   sessions      Session[]
@@ -158,4 +163,181 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// ============================================================================
+// ASSET MANAGEMENT MODULE - Database Schema Extensions
+// ============================================================================
+
+// Asset Condition States
+enum AssetCondition {
+  WORKING
+  DAMAGED
+  DECOMMISSIONED
+  UNDER_MAINTENANCE
+}
+
+// Asset Deployment Status
+enum AssetStatus {
+  AVAILABLE
+  DEPLOYED
+  RESERVED
+  IN_TRANSIT
+  UNAVAILABLE
+}
+
+// Checkout Transaction States
+enum CheckoutStatus {
+  BORROWED      // Currently checked out
+  RETURNED      // Successfully returned
+  OVERDUE       // Past due date (computed)
+  DAMAGED       // Returned with damage
+  LOST          // Not returned, considered lost
+}
+
+// Core Asset Definition
+model Asset {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  sku         String?       @unique  // Stock keeping unit
+  serialNumber String?      @unique
+  category    String        // User-defined categories
+  quantity    Int           @default(1)
+  available   Int           @default(1)  // Real-time availability
+  condition   AssetCondition @default(WORKING)
+  status      AssetStatus   @default(AVAILABLE)
+  location    String?       // Physical location
+  notes       String?
+  
+  // Metadata
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      String        // Owner
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  checkoutItems AssetCheckoutItem[]
+  presetItems   AssetPresetItem[]
+  attachments   AssetAttachment[]
+  
+  // Indexes
+  @@index([userId])
+  @@index([category])
+  @@index([status])
+  @@index([condition])
+  @@index([createdAt])
+}
+
+// Asset File Attachments (similar to TaskAttachment)
+model AssetAttachment {
+  id        String   @id @default(cuid())
+  filename  String
+  filepath  String
+  mimetype  String
+  size      Int
+  createdAt DateTime @default(now())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  @@index([assetId])
+}
+
+// Checkout Ticket (Transaction Header)
+model AssetCheckout {
+  id          String         @id @default(cuid())
+  
+  // Borrower Information
+  borrowerName String
+  borrowerEmail String?
+  borrowerPhone String?
+  borrowerDepartment String?
+  borrowerId  String?        // Reference to User if registered
+  
+  // Timestamps
+  borrowedAt  DateTime       @default(now())
+  dueDate     DateTime
+  returnedAt  DateTime?
+  
+  // Status & Condition
+  status      CheckoutStatus @default(BORROWED)
+  damageFlag  Boolean        @default(false)
+  damageNotes String?
+  returnCondition AssetCondition?
+  
+  // Administrative
+  remarks     String?
+  checkedOutBy String        // User who created the checkout
+  checkedInBy String?        // User who processed return
+  
+  // Metadata
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  userId      String         // Owner of the checkout record
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  items       AssetCheckoutItem[]
+  
+  // Indexes
+  @@index([userId])
+  @@index([borrowerId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([borrowedAt])
+}
+
+// Junction: Checkout Ticket -> Assets (Line Items)
+model AssetCheckoutItem {
+  id          String        @id @default(cuid())
+  quantity    Int           @default(1)
+  returnedAt  DateTime?
+  condition   AssetCondition @default(WORKING)
+  notes       String?
+  
+  // Relations
+  checkoutId  String
+  checkout    AssetCheckout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  assetId     String
+  asset       Asset         @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  
+  @@index([checkoutId])
+  @@index([assetId])
+  @@unique([checkoutId, assetId])  // Prevent duplicate assets in same checkout
+}
+
+// Preset: Predefined Asset Combinations
+model AssetPreset {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  
+  // Metadata
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  items       AssetPresetItem[]
+  
+  @@index([userId])
+  @@index([isActive])
+}
+
+// Junction: Preset -> Assets
+model AssetPresetItem {
+  id        String      @id @default(cuid())
+  quantity  Int         @default(1)
+  notes     String?
+  
+  // Relations
+  presetId  String
+  preset    AssetPreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  assetId   String
+  asset     Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  @@index([presetId])
+  @@index([assetId])
 }

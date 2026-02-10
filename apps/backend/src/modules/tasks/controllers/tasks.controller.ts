@@ -23,13 +23,14 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import type { Response } from 'express';
-import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
+import { AuthGuard } from '@thallesp/nestjs-better-auth';
 import { ApiTags } from '@nestjs/swagger';
 import { ActiveUser } from '../../../core/decorators/active-user.decorator'; // Adjust path
+import { UseGuards } from '@nestjs/common';
 
 @ApiTags('tasks')
 @Controller('tasks')
-@AllowAnonymous()
+@UseGuards(AuthGuard)
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
@@ -55,7 +56,7 @@ export class TasksController {
     @Query('category') category: string,
     @ActiveUser('id') userId: string,
   ) {
-    console.log(`✅ Controller received UserID from Decorator: ${userId}`);
+    // User ID received from ActiveUser decorator - logged by AuthGuard
     return this.tasksService.findAll(userId, undefined, category);
   }
 

@@ -11,6 +11,9 @@ import { Request, Response, NextFunction } from 'express';
 
 import { TasksModule } from '@modules/tasks';
 import { UserModule } from '@modules/users';
+import { AssetsModule } from '@modules/assets';
+import { AssetCheckoutsModule } from '@modules/asset-checkouts';
+import { AssetPresetsModule } from '@modules/asset-presets';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 @Module({
@@ -44,6 +47,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
     }),
     UserModule,
     TasksModule,
+    AssetsModule,
+    AssetCheckoutsModule,
+    AssetPresetsModule,
     PrismaModule,
   ],
 })
@@ -57,6 +63,9 @@ export class AppModule {
       .addTag('auth', 'Authentication endpoints')
       .addTag('tasks', 'Task management')
       .addTag('users', 'User management')
+      .addTag('assets', 'Asset inventory management')
+      .addTag('asset-checkouts', 'Asset checkout and borrowing system')
+      .addTag('asset-presets', 'Asset preset configurations')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api-docs', app, document); // Accessible at /api-docs
