@@ -81,13 +81,25 @@ export function Sidebar() {
   const pathname = usePathname();
 
   const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = "/login";
+    try {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            // Redirect to landing page instead of login
+            window.location.href = "/";
+          },
+          onError: (error) => {
+            console.error("Logout failed:", error);
+            // Fallback: force redirect anyway
+            window.location.href = "/";
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error("Logout exception:", error);
+      // Fallback: clear local state and redirect
+      window.location.href = "/";
+    }
   };
 
   return (

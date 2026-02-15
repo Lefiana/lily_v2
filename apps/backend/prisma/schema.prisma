@@ -76,6 +76,20 @@ model User {
   checkouts    AssetCheckout[]
   presets      AssetPreset[]
 
+  // Gamification Fields
+  level        Int      @default(1)
+  exp          Int      @default(0)
+  currency     Int      @default(0)
+  competence   Int      @default(0)
+  lastDailyReset DateTime @default(now())
+  
+  // Gamification Relations
+  dailyQuests  DailyQuest[]
+  habitEntries HabitEntry[]
+  gachaPulls   GachaPull[]
+  collection   UserCollection[]
+  currencyTransactions CurrencyTransaction[]
+
   emailVerified Boolean   @default(false)
   sessions      Session[]
   accounts      Account[]
@@ -340,4 +354,271 @@ model AssetPresetItem {
   
   @@index([presetId])
   @@index([assetId])
+}
+
+// ============================================================================
+// GAMIFICATION MODULE - Database Schema Extensions
+// ============================================================================
+
+// Daily Quest System
+model DailyQuest {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  
+  // Rewards
+  currencyReward Int @default(250)
+  expReward      Int @default(50)
+  
+  // Daily tracking
+  date        DateTime  @default(now())
+  questNumber Int       // 1-5 for the 5 daily quests
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([userId, date, questNumber])
+  @@index([userId, date])
+  @@index([userId, completed])
+}
+
+// Habit System
+enum HabitDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+model HabitTemplate {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  category    String         // 'exercise', 'reading', 'meditation', etc.
+  difficulty  HabitDifficulty @default(BEGINNER)
+  minLevel    Int            @default(1)  // Minimum user level to unlock
+  
+  // Suggestion weights
+  weight      Int            @default(1)  // Higher = more likely to suggest
+  
+  createdAt   DateTime       @default(now())
+  
+  entries     HabitEntry[]
+  
+  @@index([difficulty, minLevel])
+}
+
+model HabitEntry {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  templateId  String?
+  template    HabitTemplate? @relation(fields: [templateId], references: [id])
+  
+  customTitle String?   // If user creates custom habit
+  
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  
+  date        DateTime  @default(now())
+  
+  // Rewards
+  currencyReward Int @default(100)
+  expReward      Int @default(50)
+  competenceGain Int @default(5)  // Points toward competence bar
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId, date])
+  @@index([userId, completed])
+}
+
+// Gacha System
+enum GachaPoolType {
+  STANDARD    // Wallhaven API pool - 1,000 currency
+  PREMIUM     // Admin pool - 2,500 currency
+}
+
+enum RarityTier {
+  COMMON      // 60%
+  UNCOMMON    // 25%
+  RARE        // 10%
+  EPIC        // 4%
+  LEGENDARY   // 1%
+}
+
+model GachaPool {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  type        GachaPoolType
+  cost        Int            // 1000 or 2500
+  
+  // Admin controls
+  isActive    Boolean        @default(true)
+  isAdminOnly Boolean        @default(false)
+  
+  // Wallhaven API config (for STANDARD pool)
+  wallhavenTags String?      // e.g., "anime,landscape"
+  
+  // Source priority configuration (JSON array of source types)
+  sourcePriority Json?        @default("[\"local\", \"cloudinary\", \"wallhaven\"]")
+  
+  // Enable/disable sources
+  enableLocal      Boolean @default(true)
+  enableCloudinary Boolean @default(false)  // Disabled by default
+  enableWallhaven  Boolean @default(true)
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  items       GachaItem[]
+  pulls       GachaPull[]
+  poolRarityConfigs PoolRarityConfig[]
+  cloudinaryAssets  CloudinaryAsset[]
+  
+  @@index([isActive])
+  @@index([isAdminOnly])
+}
+
+model GachaItem {
+  id          String    @id @default(cuid())
+  poolId      String
+  pool        GachaPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  imageUrl    String
+  rarity      RarityTier
+  
+  // Drop rates (must sum to 1.0 per pool)
+  dropRate    Float     @default(0.1)
+  
+  // Storage info (for PREMIUM pool)
+  storageType String?   // 'local' or 'cloud'
+  storagePath String?
+  
+  createdAt   DateTime  @default(now())
+  
+  pulls       GachaPull[]
+  collection  UserCollection[]
+  
+  @@index([poolId, rarity])
+}
+
+model GachaPull {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  poolId      String
+  pool        GachaPool @relation(fields: [poolId], references: [id])
+  
+  itemId      String
+  item        GachaItem @relation(fields: [itemId], references: [id])
+  
+  cost        Int       // Actual cost paid (with multipliers)
+  pulledAt    DateTime  @default(now())
+  
+  @@index([userId, pulledAt])
+  @@index([poolId, pulledAt])
+}
+
+model UserCollection {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  itemId      String
+  item        GachaItem @relation(fields: [itemId], references: [id])
+  
+  obtainedAt  DateTime  @default(now())
+  pullCount   Int       @default(1)  // How many pulls to get this
+  
+  @@unique([userId, itemId])
+  @@index([userId, obtainedAt])
+}
+
+// Rarity Weight Configuration (Admin-configurable per pool)
+model PoolRarityConfig {
+  id          String     @id @default(cuid())
+  poolId      String
+  pool        GachaPool  @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  
+  rarity      RarityTier
+  weight      Int        @default(1)  // Relative weight
+  probability Float?     // Precalculated probability (0-1)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@unique([poolId, rarity])
+  @@index([poolId])
+}
+
+// Cloudinary Asset Registry (tracks manually added Cloudinary assets)
+model CloudinaryAsset {
+  id          String     @id @default(cuid())
+  
+  // Cloudinary identifiers
+  publicId    String     @unique
+  secureUrl   String
+  
+  // Pool assignment
+  poolId      String
+  pool        GachaPool  @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  name        String
+  rarity      RarityTier @default(COMMON)
+  weight      Int        @default(1)
+  
+  // Admin tracking
+  uploadedBy  String
+  uploadedAt  DateTime   @default(now())
+  
+  // Optional tags for organization
+  tags        String[]   @default([])
+  
+  @@index([poolId, rarity])
+  @@index([uploadedBy])
+  @@index([uploadedAt])
+}
+
+// Currency Transaction Log
+enum TransactionType {
+  QUEST_REWARD
+  HABIT_REWARD
+  LEVEL_UP_BONUS
+  GACHA_PULL
+  ADMIN_GRANT
+  ADMIN_DEDUCT
+}
+
+model CurrencyTransaction {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  amount      Int             // Positive = gain, Negative = spend
+  type        TransactionType
+  description String?
+  
+  // Balance tracking
+  balanceBefore Int
+  balanceAfter  Int
+  
+  metadata    Json?           // Additional context (questId, habitId, etc.)
+  
+  createdAt   DateTime        @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([userId, type])
 }

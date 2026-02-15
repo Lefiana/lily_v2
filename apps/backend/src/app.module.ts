@@ -14,6 +14,7 @@ import { UserModule } from '@modules/users';
 import { AssetsModule } from '@modules/assets';
 import { AssetCheckoutsModule } from '@modules/asset-checkouts';
 import { AssetPresetsModule } from '@modules/asset-presets';
+import { GamificationModule } from '@modules/gamification/gamification.module';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 @Module({
@@ -50,6 +51,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
     AssetsModule,
     AssetCheckoutsModule,
     AssetPresetsModule,
+    GamificationModule,
     PrismaModule,
   ],
 })
